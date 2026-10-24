@@ -2,22 +2,23 @@ package app
 
 import (
 	"context"
-	"fmt"
-	"net/http"
-	"os"
+	"time"
 
 	"github.com/ssqwet1324/load-test/internal/config"
+	"github.com/ssqwet1324/load-test/internal/report"
 	"github.com/ssqwet1324/load-test/internal/runner"
 )
 
-func Run() {
+func Run(ctx context.Context) error {
 	cfg, err := config.Parse()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "error:", err)
-		os.Exit(1)
+		return err
 	}
-	fmt.Printf("%+v\n", cfg)
 
-	client := &http.Client{Timeout: cfg.Timeout}
-	fmt.Printf("%+v\n", runner.DoRequest(context.Background(), client, cfg.URL))
+	start := time.Now()
+	results := runner.Run(ctx, cfg)
+	rep := report.Build(results, time.Since(start))
+	rep.Print()
+
+	return nil
 }
